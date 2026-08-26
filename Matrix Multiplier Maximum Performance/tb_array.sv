@@ -36,7 +36,7 @@ module tb_array;
         a_in_2 = 8'd3;
         w_in_2 = 8'd3;
         @(negedge clk);
- 		a_in_1 = 8'd0;
+ 		    a_in_1 = 8'd0;
       	w_in_1 = 8'd0;
         a_in_2 = 8'd4;
         w_in_2 = 8'd1;
@@ -47,9 +47,7 @@ module tb_array;
         w_in_2 = 8'd0;
         @(negedge clk);
         @(negedge clk);
-        rstn = 0;
-
-
+        rstn = 0; 
         $finish();
 
     end
