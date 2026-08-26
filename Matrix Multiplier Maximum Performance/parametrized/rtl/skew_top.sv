@@ -1,5 +1,5 @@
 module skew_top #(
-    parameter int N = 2
+    parameter int N = 3
 )(  
     input logic [7:0] row_in [0:N-1],
     input logic [7:0] col_in [0:N-1],

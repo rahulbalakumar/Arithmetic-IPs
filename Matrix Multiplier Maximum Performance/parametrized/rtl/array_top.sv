@@ -1,4 +1,3 @@
-`include "pe.sv"
 module array_top #(
     parameter int N = 3
     ) (
