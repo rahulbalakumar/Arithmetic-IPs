@@ -1,8 +1,10 @@
 module tb_booth_pp_gen;
-    logic [7:0] M;
+    localparam WIDTH = 8;
+
+    logic [WIDTH-1:0] M;
     logic [1:0] sel;
     logic negate;
-    logic [8:0] pp;
+    logic [WIDTH:0] pp;
 
     booth_pp_gen dut (.M(M),
                       .sel(sel),
