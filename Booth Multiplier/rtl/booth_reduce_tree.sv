@@ -29,7 +29,7 @@ module booth_reduce_tree #(
                     );
             end 
 
-            for (i = 0; i < REMAINDER; i++) begin
+            for (i = 0; i < REMAINDER; i++) begin : passthrough
                 assign next_stage[2*GROUPS+i] = rows[3*GROUPS+i];
             end
 
