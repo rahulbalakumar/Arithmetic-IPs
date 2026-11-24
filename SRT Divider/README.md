@@ -12,7 +12,7 @@ Parametrized unsigned divider (`WIDTH` = 8/16/32/64/128) using normalised radix-
 | Item | Behaviour |
 |---|---|
 | Inputs | Valid only in the cycle `start` is high |
-| Latency | `s+4` cycles from `start` to `done` (`s` = divisor leading zeros); 2 for divide by zero |
+| Latency | `s+5` cycles from `start` to `done` (`s` = divisor leading zeros); 2 for divide by zero |
 | Results | Held from `done` until the next accepted `start` |
 | Divide by zero | `quotient` = all ones, `remainder` = `dividend`, `div_by_zero` = 1 |
 | Reset | Synchronous, active-high |
@@ -21,29 +21,36 @@ Parametrized unsigned divider (`WIDTH` = 8/16/32/64/128) using normalised radix-
 
 ```
 srt_top            top level (wiring only)
- ├─ srt_ctrl       FSM (IDLE -> NORM -> RUN x (s+1) -> FIX -> DONE)
- └─ srt_datapath   registers, SRT step, final quotient/remainder fix-up
-     ├─ lzc        leading-zero counter (shift amount + zero flag)
+ ├─ srt_ctrl       FSM (IDLE -> NORM -> RUN x (s+1) -> FIX -> SHIFT -> DONE)
+ └─ srt_datapath   registers, SRT step, final quotient/remainder fix-up (FIX), remainder shift (SHIFT)
+     ├─ lzc        leading-zero counter, recursive tree (shift amount + zero flag)
      └─ srt_qsel   digit selection (3 bits in, +1 / 0 / -1 out)
-srt_pkg            LOAD / NORM / RUN / FIX / HOLD commands
+srt_pkg            LOAD / NORM / RUN / FIX / SHIFT / HOLD commands
 ```
 
 ## Latency vs Restoring (cycles)
 
 | WIDTH | Restoring | SRT best / worst | SRT average (random divisor) |
 |---|---|---|---|
-| 8 | 9 | 4 / 11 | 5 |
-| 32 | 33 | 4 / 35 | 5 |
-| 128 | 129 | 4 / 131 | 5 |
+| 8 | 9 | 5 / 12 | 6 |
+| 32 | 33 | 5 / 36 | 6 |
+| 128 | 129 | 5 / 132 | 6 |
 
 ## Verification
 
 | Testbench | Result |
 |---|---|
-| `tb_lzc` (directed, one-hot, exhaustive ≤ 16 bits, random) | PASS at WIDTH = 8 and 128 |
+| `tb_lzc` (directed, one-hot, exhaustive ≤ 16 bits, random) | PASS at WIDTH = 8, 16 and 128 |
 | `tb_srt_top` (values + latency on every division) | PASS: WIDTH = 8 (10,081 tests), WIDTH = 128 (2,081 tests) |
 
 ## Next Steps
 
 - Synthesis (LUTs, Fmax) for comparison with the restoring divider.
 - Carry-save partial remainder, if synthesis shows the RUN adder is the critical path.
+
+## Optimisations (after first synthesis)
+
+| Change | Why |
+|---|---|
+| Tree leading-zero counter (log2(WIDTH) levels) | The loop-based counter was a ~45-level chain and limited Fmax to 38.6 MHz at 128 bits |
+| FIX split into FIX + SHIFT (latency +1) | The final add and the remainder shift were in one cycle and set the clock at 32 bits |
