@@ -1,30 +1,34 @@
-module pe (
-    input logic [7:0] a_in,
-    input logic [7:0] w_in,
-    input logic rstn,
-    input logic clk,
-    output logic [7:0] a_out,
-    output logic [7:0] w_out,
-    output logic [15:0] acc
+// Processing element: one unsigned multiply-accumulate per cycle.
+// Activation flows right, weight flows down, each through one register.
+module pe #(
+    parameter int DATA_W = 8,
+    parameter int ACC_W  = 19
+) (
+    input  logic              clk,
+    input  logic              rstn,   // Asynchronous, active-low
+    input  logic              clear,  // 1: start a new sum (acc <= a*w instead of acc + a*w)
+    input  logic [DATA_W-1:0] a_in,
+    input  logic [DATA_W-1:0] w_in,
+    output logic [DATA_W-1:0] a_out,
+    output logic [DATA_W-1:0] w_out,
+    output logic [ACC_W-1:0]  acc
 );
-    logic [15:0] result;
-    logic [7:0] a_reg;
-    logic [7:0] w_reg;
-    always_ff @(posedge clk or negedge rstn) begin
-        if(!rstn) begin
-            result <= '0;
-            a_reg <= '0;
-            w_reg <= '0;
-        end else begin
-            a_reg <= a_in;
-            w_reg <= w_in;
-            result <= result + a_in * w_in;
-        end
-    end 
+    logic [ACC_W-1:0]    result;
+    logic [2*DATA_W-1:0] product;
 
-    always_comb begin
-        a_out = a_reg;
-        w_out = w_reg;
-        acc = result;
+    assign product = a_in * w_in; // Full 2*DATA_W-bit product (operands widened by the context)
+
+    always_ff @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
+            result <= '0;
+            a_out  <= '0;
+            w_out  <= '0;
+        end else begin
+            a_out  <= a_in;
+            w_out  <= w_in;
+            result <= clear ? ACC_W'(product) : result + ACC_W'(product);
+        end
     end
+
+    assign acc = result;
 endmodule
