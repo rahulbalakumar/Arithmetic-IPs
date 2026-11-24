@@ -21,6 +21,7 @@ module srt_datapath
         logic [WIDTH-1:0] D; // Normalized divisor (MSB = 1)
         logic signed [WIDTH+1:0] V; // Partial remainder
         logic [WIDTH-1:0] Qp, Qm; // Digit shift registers
+        logic [WIDTH-1:0] rem_norm; // Corrected remainder before denormalisation (written in FIX)
 
         // Combinational signals
         logic q_pos, q_neg; // Digit from srt_qsel
@@ -30,7 +31,6 @@ module srt_datapath
         logic signed [WIDTH+1:0] R_final; // Real remainder (recovered from V by shifting right)
         logic signed [WIDTH+1:0] R_corr; // To correct negative remainder
         logic [WIDTH-1:0] Q_final; // Qp + ~Qm + carry-in
-        logic [WIDTH-1:0] rem_final; // R_corr shifted right by s_reg
         logic carry_in;
         // Submodules
         lzc #(
@@ -75,7 +75,6 @@ module srt_datapath
             end
 
             Q_final = Qp + ~Qm + carry_in;
-            rem_final = R_corr[WIDTH-1:0] >> s_reg;
         end
 
         // State Registers
@@ -88,6 +87,7 @@ module srt_datapath
                 V <= '0;
                 Qp <= '0;
                 Qm <= '0;
+                rem_norm <= '0;
                 quotient <= '0;
                 remainder <= '0;
             end else begin
@@ -115,7 +115,10 @@ module srt_datapath
                     end
                     FIX_CMD: begin
                         quotient <= Q_final;
-                        remainder <= rem_final;
+                        rem_norm <= R_corr[WIDTH-1:0];
+                    end
+                    SHIFT_CMD: begin
+                        remainder <= rem_norm >> s_reg; // separate cycle: the shift no longer follows the add
                     end
                     HOLD_CMD:begin
                     end

@@ -136,7 +136,7 @@ module tb_srt_top;
         int lat;
         bit fail = 0;
 
-        exp_lat = (b == 0) ? 2 : ref_lz(b) + 4;
+        exp_lat = (b == 0) ? 2 : ref_lz(b) + 5;
 
 
         n_tests++;

@@ -19,6 +19,7 @@ module srt_ctrl
         NORM,
         RUN,
         FIX,
+        SHIFT,
         DONE
     } state_t;
 
@@ -47,7 +48,8 @@ module srt_ctrl
             IDLE: next_state = start ? NORM: IDLE;
             NORM: next_state = div_by_zero ? DONE : RUN;
             RUN: next_state = (counter == 0) ? FIX : RUN;
-            FIX: next_state = DONE;
+            FIX: next_state = SHIFT;
+            SHIFT: next_state = DONE;
             DONE: next_state = IDLE;
             default: next_state = IDLE;
         endcase
@@ -56,7 +58,7 @@ module srt_ctrl
     // Moore Outputs 
     always_comb begin
         done = (state == DONE);
-        busy = (state == RUN || state == FIX || state == NORM);
+        busy = (state == NORM || state == RUN || state == FIX || state == SHIFT);
     end
 
     // Mealy Outputs
@@ -67,6 +69,7 @@ module srt_ctrl
             NORM: cmd = NORM_CMD;
             RUN: cmd = RUN_CMD;
             FIX: cmd = FIX_CMD;
+            SHIFT: cmd = SHIFT_CMD;
             DONE: cmd = HOLD_CMD;
             default: cmd = HOLD_CMD;
         endcase

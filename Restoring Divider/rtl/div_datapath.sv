@@ -23,9 +23,12 @@ module div_datapath
     always_comb begin
         calc_wire_1 = {r_reg,shift_reg[WIDTH-1]}; // holds shifted R with leftmost bit of shift_reg
         
-        q_bit = ({1'b0, d_reg} <= calc_wire_1); // zero extension to make d_reg have WIDTH + 1 bits
-
         calc_wire_2 = calc_wire_1 - {1'b0,d_reg}; // holds difference between remainder and divisor
+
+        // The difference always lies between -d_reg and d_reg-1, so it fits in WIDTH+1 bits
+        // as a two's complement number: its top bit is 1 exactly when the divisor did not fit.
+        // Reusing it removes the separate WIDTH+1-bit comparator.
+        q_bit = ~calc_wire_2[WIDTH];
 
     end
     always_ff @(posedge clk) begin
